@@ -170,8 +170,8 @@ export const HARNESSES: HarnessDef[] = [
     id: "antigravity",
     label: "Antigravity CLI",
     models: models("gemini-3.1-pro", "gemini-3.5-flash"),
-    // no documented reasoning-effort flag
-    buildCommand: (m, _e, p) => `antigravity -m ${m.id} ${q(p)}`,
+    // bound as `agy`; new + lightly documented, so no speculative effort flag
+    buildCommand: (m, _e, p) => `agy -m ${m.id} ${q(p)}`,
   },
   {
     id: "cursor",
