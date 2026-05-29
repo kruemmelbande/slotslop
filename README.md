@@ -10,8 +10,13 @@ Press <kbd>⏎</kbd> or <kbd>space</kbd> to stop each reel, left to right. It th
 prints the command to run for whatever it landed on.
 
 Built as a TUI with [OpenTUI](https://github.com/anomalyco/opentui) (React renderer).
-It uses **no hardcoded colors** — only `bold`/`dim`/`inverse` text attributes — so
-the machine adopts whatever palette your terminal theme provides.
+The reels stay on your terminal's themed ANSI palette (high contrast, native feel),
+while the **flashy layer goes full Vegas** in truecolor:
+
+- 🎉 **confetti** bursts out of a reel every time you hit a button, with a bigger
+  popper when a reel locks in and a full-screen confetti rain on the win
+- 🌈 a **scrolling rainbow marquee** title and gradient bars framing the machine
+- a flashing **JACKPOT** banner + color-cycling command box when all three lock
 
 The reels are **dependent**: the harness you land on restricts which models can
 appear next (Claude Code only spins Anthropic models, Antigravity only Gemini,
