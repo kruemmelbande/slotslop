@@ -13,8 +13,10 @@ Built as a TUI with [OpenTUI](https://github.com/anomalyco/opentui) (React rende
 The reels stay on your terminal's themed ANSI palette (high contrast, native feel),
 while the **flashy layer goes full Vegas** in truecolor:
 
-- 🎉 **confetti** bursts out of a reel every time you hit a button, with a bigger
-  popper when a reel locks in and a full-screen confetti rain on the win
+- 💥 a **shockwave** ring radiates from a column the instant you press the button
+- 🎉 **confetti** erupts when a reel actually *locks in*, with a full-screen
+  confetti rain on the win
+- ✨ a **wrapping rainbow shimmer** chases around the border of the active column
 - 🌈 a **scrolling rainbow marquee** title and gradient bars framing the machine
 - a flashing **JACKPOT** banner + color-cycling command box when all three lock
 

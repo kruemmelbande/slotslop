@@ -1,9 +1,10 @@
-import { createTextAttributes, RGBA, type CliRenderer, type KeyEvent } from "@opentui/core";
+import { createTextAttributes, RGBA, type BoxRenderable, type CliRenderer, type KeyEvent } from "@opentui/core";
 import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react";
 import { useEffect, useReducer, useRef } from "react";
 import { HARNESSES, EFFORTS } from "./data";
 import { SlotEngine, type Column } from "./engine";
 import { Confetti } from "./confetti";
+import { Shockwaves, SHOCK_DUR, SHOCK_MAXR } from "./shockwave";
 
 const FRAME_MS = 70; // reel step cadence
 const VISUAL_MS = 33; // ~30fps re-render for the flashy layers
@@ -18,9 +19,9 @@ const IDX = {
   green: RGBA.fromIndex(2),
   yellow: RGBA.fromIndex(3),
   white: RGBA.fromIndex(7),
+  dimGray: RGBA.fromIndex(8), // active reel's underlying border (hidden by shimmer)
 };
 
-// ── layout / particle-origin geometry ───────────────────────────────────────
 const ACTIVE_TITLE = "▸ HARNESS ◂";
 const MAX_LABEL = Math.max(
   ACTIVE_TITLE.length,
@@ -31,10 +32,7 @@ const MAX_LABEL = Math.max(
 const CONTENT_W = MAX_LABEL + 2;
 const REEL_W = CONTENT_W + 4;
 const GAP = 2;
-const PAD = 1;
 const MACHINE_W = REEL_W * 3 + GAP * 2;
-const reelCenterX = (i: number) => PAD + i * (REEL_W + GAP) + Math.floor(REEL_W / 2);
-const PAYLINE_Y = 8; // approx screen row of the center payline
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function payline(label: string, w: number): string {
@@ -62,12 +60,24 @@ function hsv(h: number, s = 1, v = 1): string {
   const to = (n: number) => Math.round((n + m) * 255).toString(16).padStart(2, "0");
   return `#${to(r)}${to(g)}${to(b)}`;
 }
+const gray = (v: number) => {
+  const h = Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+  return `#${h}${h}${h}`;
+};
+
+interface Rect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+const rectOf = (b: BoxRenderable | null): Rect | null =>
+  b ? { x: b.x, y: b.y, w: b.width, h: b.height } : null;
 
 function Rainbow({ text, phase, speed = 120, spread = 16 }: { text: string; phase: number; speed?: number; spread?: number }) {
-  const chars = [...text];
   return (
     <text attributes={A.bold}>
-      {chars.map((ch, i) => (
+      {[...text].map((ch, i) => (
         <span key={i} fg={hsv(phase * speed + i * spread)}>
           {ch}
         </span>
@@ -78,8 +88,7 @@ function Rainbow({ text, phase, speed = 120, spread = 16 }: { text: string; phas
 
 /** A scrolling rainbow block bar — the Vegas marquee. */
 function RainbowBar({ width, phase }: { width: number; phase: number }) {
-  const cells = [];
-  for (let i = 0; i < width; i++) cells.push(i);
+  const cells = Array.from({ length: width }, (_, i) => i);
   return (
     <text>
       {cells.map((i) => (
@@ -91,20 +100,32 @@ function RainbowBar({ width, phase }: { width: number; phase: number }) {
   );
 }
 
-function Reel({ col, active, done }: { col: Column; active: boolean; done: boolean }) {
+function Reel({
+  col,
+  active,
+  done,
+  boxRef,
+}: {
+  col: Column;
+  active: boolean;
+  done: boolean;
+  boxRef: (el: BoxRenderable | null) => void;
+}) {
   const L = col.labels.length;
   const at = (o: number) => col.labels[(col.idx + o + L * 8) % L]!;
   const stopped = col.state === "stopped";
   const barBg = stopped ? IDX.green : active && col.state === "stopping" ? IDX.yellow : IDX.white;
   const titleAttr = active && !done ? A.bold : A.dim;
   const title = stopped ? `✔ ${col.title}` : active && !done ? `▸ ${col.title} ◂` : col.title;
+  // Active reel's real border is hidden under the shimmer overlay.
+  const borderColor = stopped ? IDX.green : active && !done ? IDX.dimGray : IDX.dimGray;
 
   return (
     <box style={{ flexDirection: "column", width: REEL_W, flexShrink: 0, alignItems: "center" }}>
       <box style={{ width: "100%", justifyContent: "center" }}>
         <text attributes={titleAttr}>{title}</text>
       </box>
-      <box style={{ width: "100%", flexDirection: "column", border: true, paddingLeft: 1, paddingRight: 1 }}>
+      <box ref={boxRef} style={{ width: "100%", flexDirection: "column", border: true, borderColor, paddingLeft: 1, paddingRight: 1 }}>
         <box style={{ width: "100%", justifyContent: "center" }}>
           <text attributes={A.dim}>{at(-1)}</text>
         </box>
@@ -115,6 +136,71 @@ function Reel({ col, active, done }: { col: Column; active: boolean; done: boole
           <text attributes={A.dim}>{at(1)}</text>
         </box>
       </box>
+    </box>
+  );
+}
+
+/** Ordered (clockwise) perimeter cells of a box border. */
+function borderCells(r: Rect): { px: number; py: number; ch: string }[] {
+  const out: { px: number; py: number; ch: string }[] = [];
+  const { x, y, w, h } = r;
+  for (let i = 0; i < w; i++) out.push({ px: x + i, py: y, ch: i === 0 ? "┌" : i === w - 1 ? "┐" : "─" });
+  for (let j = 1; j < h - 1; j++) out.push({ px: x + w - 1, py: y + j, ch: "│" });
+  for (let i = w - 1; i >= 0; i--) out.push({ px: x + i, py: y + h - 1, ch: i === 0 ? "└" : i === w - 1 ? "┘" : "─" });
+  for (let j = h - 2; j >= 1; j--) out.push({ px: x, py: y + j, ch: "│" });
+  return out;
+}
+
+function FXLayer({
+  activeRect,
+  shocks,
+  phase,
+  w,
+  h,
+}: {
+  activeRect: Rect | null;
+  shocks: Shockwaves;
+  phase: number;
+  w: number;
+  h: number;
+}) {
+  const inBounds = (px: number, py: number) => px >= 0 && px < w && py >= 0 && py < h;
+  return (
+    <box style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", zIndex: 90 }}>
+      {/* shimmer border around the active column */}
+      {activeRect &&
+        borderCells(activeRect).map((c, i) =>
+          inBounds(c.px, c.py) ? (
+            <text key={`b${i}`} style={{ position: "absolute", left: c.px, top: c.py }} fg={hsv(phase * 260 - i * 12, 1, 1)} attributes={A.bold}>
+              {c.ch}
+            </text>
+          ) : null,
+        )}
+      {/* expanding shockwave rings from the last press */}
+      {shocks.waves.flatMap((wv) => {
+        const r = (wv.t / SHOCK_DUR) * SHOCK_MAXR;
+        const bright = 1 - wv.t / SHOCK_DUR;
+        const ch = bright > 0.6 ? "●" : bright > 0.3 ? "•" : "·";
+        const v = 90 + bright * 165;
+        const fg = `#${Math.round(v * 0.55).toString(16).padStart(2, "0")}${Math.round(v).toString(16).padStart(2, "0")}${Math.round(v).toString(16).padStart(2, "0")}`;
+        const seen = new Set<string>();
+        const steps = Math.max(18, Math.round(r * 9));
+        const nodes = [];
+        for (let k = 0; k < steps; k++) {
+          const a = (k / steps) * Math.PI * 2;
+          const px = Math.round(wv.cx + Math.cos(a) * r * 2);
+          const py = Math.round(wv.cy + Math.sin(a) * r);
+          const key = `${px},${py}`;
+          if (seen.has(key) || !inBounds(px, py)) continue;
+          seen.add(key);
+          nodes.push(
+            <text key={`s${wv.id}-${k}`} style={{ position: "absolute", left: px, top: py }} fg={fg} attributes={A.bold}>
+              {ch}
+            </text>,
+          );
+        }
+        return nodes;
+      })}
     </box>
   );
 }
@@ -147,19 +233,30 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
   if (!confettiRef.current) confettiRef.current = new Confetti();
   const confetti = confettiRef.current;
 
+  const shockRef = useRef<Shockwaves>(undefined as unknown as Shockwaves);
+  if (!shockRef.current) shockRef.current = new Shockwaves();
+  const shocks = shockRef.current;
+
+  const boxRefs = useRef<(BoxRenderable | null)[]>([null, null, null]);
+
   const [, force] = useReducer((n: number) => n + 1, 0);
-  const acc = useRef(0); // reel-step accumulator
-  const vacc = useRef(0); // visual re-render accumulator
-  const phase = useRef(0); // seconds elapsed, drives gradients
+  const acc = useRef(0);
+  const vacc = useRef(0);
+  const phase = useRef(0);
   const prevActive = useRef(0);
   const prevDone = useRef(false);
+
+  // center / top of a reel box, for spawning effects
+  const center = (i: number): { cx: number; cy: number } | null => {
+    const r = rectOf(boxRefs.current[i] ?? null);
+    return r ? { cx: r.x + r.w / 2, cy: r.y + r.h / 2 } : null;
+  };
 
   useEffect(() => {
     const cb = async (deltaMs: number) => {
       const dt = deltaMs / 1000;
       phase.current += dt;
 
-      // advance reels
       if (!engine.done) {
         acc.current += deltaMs;
         while (acc.current >= FRAME_MS) {
@@ -168,22 +265,23 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
         }
       }
 
-      // celebrate when a reel locks in
+      // confetti ONLY when a selection ends (a reel locks / the win)
       if (engine.active > prevActive.current) {
-        const justLocked = prevActive.current;
-        confetti.burst(reelCenterX(justLocked), PAYLINE_Y, 38);
+        const c = center(prevActive.current);
+        if (c) confetti.burst(c.cx, c.cy - 1, 42);
         prevActive.current = engine.active;
       }
       if (engine.done && !prevDone.current) {
         prevDone.current = true;
-        confetti.burst(reelCenterX(2), PAYLINE_Y, 60); // last reel popper
-        confetti.rain(width, 80);
+        const c = center(2);
+        if (c) confetti.burst(c.cx, c.cy - 1, 70);
+        confetti.rain(width, 90);
       }
-      if (engine.done) confetti.rain(width, 2); // steady drizzle while celebrating
+      if (engine.done) confetti.rain(width, 2);
 
       confetti.update(dt, height);
+      shocks.update(dt);
 
-      // throttle the (heavier) re-render of the flashy layers
       vacc.current += deltaMs;
       if (vacc.current >= VISUAL_MS) {
         vacc.current = 0;
@@ -193,7 +291,7 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
     };
     renderer.setFrameCallback(cb);
     return () => renderer.removeFrameCallback(cb);
-  }, [engine, renderer, confetti, width, height]);
+  }, [engine, renderer, confetti, shocks, width, height]);
 
   const quit = (cmd: string | null) => {
     (renderer as CliRenderer).destroy();
@@ -212,8 +310,9 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
       return;
     }
     if (isEnter || isSpace) {
-      // every button press throws a little confetti at the active reel
-      confetti.burst(reelCenterX(engine.active), PAYLINE_Y, 16);
+      // press feedback: a shockwave radiating from the column you hit
+      const c = center(engine.active);
+      if (c) shocks.emit(c.cx, c.cy);
       engine.press();
       force();
     }
@@ -221,6 +320,7 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
 
   const cmd = engine.command(prompt);
   const p = phase.current;
+  const activeRect = !engine.done ? rectOf(boxRefs.current[engine.active] ?? null) : null;
 
   return (
     <>
@@ -231,7 +331,15 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
 
         <box style={{ flexDirection: "row", gap: GAP }}>
           {engine.cols.map((col, i) => (
-            <Reel key={col.kind} col={col} active={i === engine.active} done={engine.done} />
+            <Reel
+              key={col.kind}
+              col={col}
+              active={i === engine.active}
+              done={engine.done}
+              boxRef={(el) => {
+                boxRefs.current[i] = el;
+              }}
+            />
           ))}
         </box>
 
@@ -254,6 +362,7 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
           </text>
         )}
       </box>
+      <FXLayer activeRect={activeRect} shocks={shocks} phase={p} w={width} h={height} />
       <ConfettiLayer confetti={confetti} w={width} h={height} />
     </>
   );
