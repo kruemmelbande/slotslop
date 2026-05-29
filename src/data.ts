@@ -144,10 +144,12 @@ export const HARNESSES: HarnessDef[] = [
       "gemini-3.1-pro",
       "gemini-3.5-flash",
     ),
-    buildCommand: (m, _e, p) =>
-      // opencode's interactive TUI takes a project path, not a prompt, and has
-      // no reasoning-effort CLI flag — so use the documented `run [message..]`.
-      `opencode run -m ${m.provider}/${m.slug} ${q(p)}`,
+    buildCommand: (m, e, p) => {
+      // its interactive TUI takes a project path (not a prompt), so use `run`;
+      // --variant carries provider-specific reasoning effort.
+      const variant = hasReasoning(e) ? ` --variant ${e}` : "";
+      return `opencode run -m ${m.provider}/${m.slug}${variant} ${q(p)}`;
+    },
   },
   {
     id: "pi",

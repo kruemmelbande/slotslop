@@ -13,9 +13,9 @@ terminal to it — interactive mode), and <kbd>esc</kbd> leaves without running
 harness's **interactive** mode (e.g. `codex` not `codex exec`, `cursor-agent`
 without `-p`, `opencode run` since its TUI can't be seeded with a prompt). The
 rolled effort only appears as a flag where the CLI actually supports one — Claude
-Code's `--effort` (low/medium/high/xhigh/max) and Codex's `-c model_reasoning_effort`;
-the other harnesses have no effort flag, so it's shown in the UI but omitted from
-their command. (Model names are the fun fictional
+Code's `--effort`, Codex's `-c model_reasoning_effort`, and OpenCode's `--variant`;
+the rest (pi / antigravity / cursor) have no effort flag, so it's shown in the UI
+but omitted from their command. (Model names are the fun fictional
 ones, so a real CLI may still reject them — that's the joke.)
 
 Built as a TUI with [OpenTUI](https://github.com/anomalyco/opentui) (React renderer).
