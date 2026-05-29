@@ -20,6 +20,21 @@ while the **flashy layer goes full Vegas** in truecolor:
 - 🌈 a **scrolling rainbow marquee** title and gradient bars framing the machine
 - a flashing **JACKPOT** banner + color-cycling command box when all three lock
 
+## Win / lose conditions
+
+The final roll isn't always a jackpot — the combination is judged:
+
+- 🎉 **Jackpot** — a smart model (Opus 4.8 / GPT-5.5, or the solid GPT-5.4) with
+  real effort (medium/high). Rainbow banner + neon confetti rain.
+- 😫 **So close!** — a great model on a great harness (Cursor / Claude Code / Codex)…
+  but you fumbled the effort (low / no-reasoning). One hopeful amber puff that fizzles.
+- 💀 **Bust** — a "dumb" model (Sonnet 4.6, Haiku 4.6, GPT-5.4-mini, codex-spark).
+  Red debris rains down regardless of effort.
+- 📉 **Low effort** — a decent model crippled by low/no-reasoning (on a meh harness).
+- 🫠 **Tough luck :(** — you rolled Gemini. A gloomy gray drizzle.
+
+(You can still hit ⏎ to print the command in every case.)
+
 The reels are **dependent**: the harness you land on restricts which models can
 appear next (Claude Code only spins Anthropic models, Antigravity only Gemini,
 OpenCode anything…), and the model restricts which effort levels are available
