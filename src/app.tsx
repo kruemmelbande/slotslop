@@ -1,6 +1,6 @@
 import { createTextAttributes, RGBA, type BoxRenderable, type CliRenderer, type KeyEvent } from "@opentui/core";
 import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react";
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef, type ReactNode } from "react";
 import { HARNESSES, EFFORTS } from "./data";
 import { SlotEngine, type Column } from "./engine";
 import { Confetti, THEMES } from "./confetti";
@@ -124,6 +124,14 @@ function MoodText({ text, hue, phase }: { text: string; hue: number; phase: numb
   );
 }
 
+/** Horizontally center its child. (Boxes default to column flex, so we need an
+ *  explicit row direction for justifyContent to center on the horizontal axis.) */
+function Centered({ children, width = "100%" }: { children: ReactNode; width?: number | `${number}%` }) {
+  return <box style={{ width, flexDirection: "row", justifyContent: "center" }}>{children}</box>;
+}
+
+const REEL_ROWS = [-2, -1, 0, 1, 2]; // 5 rows tall; 0 is the payline
+
 function Reel({
   col,
   active,
@@ -142,23 +150,25 @@ function Reel({
   const titleAttr = active && !done ? A.bold : A.dim;
   const title = stopped ? `✔ ${col.title}` : active && !done ? `▸ ${col.title} ◂` : col.title;
   // Active reel's real border is hidden under the shimmer overlay.
-  const borderColor = stopped ? IDX.green : active && !done ? IDX.dimGray : IDX.dimGray;
+  const borderColor = stopped ? IDX.green : IDX.dimGray;
 
   return (
-    <box style={{ flexDirection: "column", width: REEL_W, flexShrink: 0, alignItems: "center" }}>
-      <box style={{ width: "100%", justifyContent: "center" }}>
+    <box style={{ flexDirection: "column", width: REEL_W, flexShrink: 0 }}>
+      <Centered>
         <text attributes={titleAttr}>{title}</text>
-      </box>
+      </Centered>
       <box ref={boxRef} style={{ width: "100%", flexDirection: "column", border: true, borderColor, paddingLeft: 1, paddingRight: 1 }}>
-        <box style={{ width: "100%", justifyContent: "center" }}>
-          <text attributes={A.dim}>{at(-1)}</text>
-        </box>
-        <text fg={IDX.black} bg={barBg} attributes={A.bold}>
-          {payline(at(0), CONTENT_W)}
-        </text>
-        <box style={{ width: "100%", justifyContent: "center" }}>
-          <text attributes={A.dim}>{at(1)}</text>
-        </box>
+        {REEL_ROWS.map((o) =>
+          o === 0 ? (
+            <text key={o} fg={IDX.black} bg={barBg} attributes={A.bold}>
+              {payline(at(0), CONTENT_W)}
+            </text>
+          ) : (
+            <Centered key={o}>
+              <text attributes={A.dim}>{at(o)}</text>
+            </Centered>
+          ),
+        )}
       </box>
     </box>
   );
@@ -380,9 +390,15 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
   return (
     <>
       <box style={{ flexDirection: "column", padding: 1 }}>
-        <Rainbow text="🎰  S L O T - S L O P  🎰" phase={p} />
-        <text attributes={A.dim}>task: {prompt}</text>
+        <Centered width={MACHINE_W}>
+          <Rainbow text="🎰   S L O T - S L O P   🎰" phase={p} />
+        </Centered>
+        <Centered width={MACHINE_W}>
+          <text attributes={A.dim}>task: {prompt}</text>
+        </Centered>
+        <box style={{ height: 1 }} />
         <MarqueeBar width={MACHINE_W} phase={p} hue={moodHue} />
+        <box style={{ height: 1 }} />
 
         <box style={{ flexDirection: "row", gap: GAP }}>
           {engine.cols.map((col, i) => (
@@ -398,6 +414,7 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
           ))}
         </box>
 
+        <box style={{ height: 1 }} />
         <MarqueeBar width={MACHINE_W} phase={p + 0.5} hue={moodHue} />
         <box style={{ height: 1 }} />
 
