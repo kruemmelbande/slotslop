@@ -6,8 +6,12 @@ A silly CLI slot machine for picking your coding setup. Three reels spin:
 2. **Model** — Sonnet 4.6, Haiku 4.6, Opus 4.8, GPT-5.5, GPT-5.4, … , Gemini 3.1 Pro, …
 3. **Effort** — no-reasoning, low, medium, high
 
-Press <kbd>⏎</kbd> or <kbd>space</kbd> to stop each reel, left to right. It then
-prints the command to run for whatever it landed on.
+Press <kbd>⏎</kbd> or <kbd>space</kbd> to stop each reel, left to right. On the
+results screen, <kbd>⏎</kbd> **runs the rolled command immediately** (handing your
+terminal to it — interactive mode), and <kbd>esc</kbd> leaves without running
+(printing the command so you can copy it). The generated commands prefer each
+harness's **interactive** mode (e.g. `codex` not `codex exec`, `cursor-agent`
+without `-p`).
 
 Built as a TUI with [OpenTUI](https://github.com/anomalyco/opentui) (React renderer).
 The reels stay on your terminal's themed ANSI palette (high contrast, native feel),

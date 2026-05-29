@@ -123,7 +123,8 @@ export const HARNESSES: HarnessDef[] = [
       const effort = hasReasoning(e)
         ? ` -c model_reasoning_effort="${e}"`
         : "";
-      return `codex exec -m ${m.id}${effort} ${q(p)}`;
+      // interactive TUI (not `codex exec`, which is the headless one-shot)
+      return `codex -m ${m.id}${effort} ${q(p)}`;
     },
   },
   {
@@ -143,7 +144,8 @@ export const HARNESSES: HarnessDef[] = [
     ),
     buildCommand: (m, e, p) => {
       const effort = hasReasoning(e) ? ` --reasoning-effort ${e}` : "";
-      return `opencode run -m ${m.provider}/${m.slug}${effort} ${q(p)}`;
+      // interactive TUI seeded with the prompt (not `opencode run`, the headless one-shot)
+      return `opencode -m ${m.provider}/${m.slug}${effort} --prompt ${q(p)}`;
     },
   },
   {
@@ -178,7 +180,8 @@ export const HARNESSES: HarnessDef[] = [
     models: models("sonnet-4.6", "opus-4.8", "gpt-5.5", "gpt-5.4", "gemini-3.1-pro"),
     buildCommand: (m, e, p) => {
       const effort = hasReasoning(e) ? ` --effort ${e}` : "";
-      return `cursor-agent -m ${m.id}${effort} -p ${q(p)}`;
+      // interactive session (drop `-p`, which is cursor-agent's non-interactive print mode)
+      return `cursor-agent -m ${m.id}${effort} ${q(p)}`;
     },
   },
 ];

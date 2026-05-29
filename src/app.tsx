@@ -256,7 +256,7 @@ function ConfettiLayer({ confetti, w, h }: { confetti: Confetti; w: number; h: n
   );
 }
 
-export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string | null) => void }) {
+export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string | null, run: boolean) => void }) {
   const renderer = useRenderer();
   const { width, height } = useTerminalDimensions();
   const engineRef = useRef<SlotEngine>(undefined as unknown as SlotEngine);
@@ -351,21 +351,21 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
     return () => renderer.removeFrameCallback(cb);
   }, [engine, renderer, confetti, shocks, width, height]);
 
-  const quit = (cmd: string | null) => {
+  const finish = (run: boolean) => {
     (renderer as CliRenderer).destroy();
-    onExit(cmd);
+    onExit(engine.command(prompt), run);
   };
 
   useKeyboard((key: KeyEvent) => {
     const isEnter = key.name === "return" || key.name === "enter" || key.sequence === "\r";
     const isSpace = key.name === "space" || key.sequence === " ";
     if (key.name === "q" || key.name === "escape") {
-      quit(null);
+      finish(false); // leave without running
       return;
     }
     if (engine.done) {
-      if (isEnter || isSpace) quit(engine.command(prompt));
-      return;
+      if (isEnter) finish(true); // Enter runs the rolled command
+      return; // (space does nothing on the results screen)
     }
     if (isEnter || isSpace) {
       // press feedback: a shockwave radiating from the column you hit
@@ -430,6 +430,11 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
             <box style={{ border: true, borderColor: boxBorder, paddingLeft: 1, paddingRight: 1, flexDirection: "column" }}>
               <text attributes={A.bold}>{cmd}</text>
             </box>
+            <box style={{ height: 1 }} />
+            <text attributes={A.dim}>
+              <span attributes={A.bold}>⏎</span> run it now {"   ·   "}
+              <span attributes={A.bold}>esc</span> to leave
+            </text>
           </box>
         ) : (
           <text attributes={A.dim}>

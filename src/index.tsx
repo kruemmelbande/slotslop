@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { spawnSync } from "node:child_process";
 import { createCliRenderer } from "@opentui/core";
 import { createRoot } from "@opentui/react";
 import { App } from "./app";
@@ -14,9 +15,16 @@ const HELP = `
   and the model restricts which effort levels can appear.
 `;
 
-function onExit(cmd: string | null): void {
+function onExit(cmd: string | null, run: boolean): void {
+  // Enter on the results screen -> hand the terminal straight to the command.
+  if (run && cmd) {
+    process.stdout.write(`\n  ▶ launching:  \x1b[1m${cmd}\x1b[0m\n\n`);
+    const res = spawnSync(cmd, { shell: true, stdio: "inherit" });
+    process.exit(res.status ?? 0);
+  }
+  // Escape (or quitting mid-spin) -> leave; show the command so it isn't lost.
   if (cmd) {
-    process.stdout.write(`\n  ▶ run this:\n\n    \x1b[1m${cmd}\x1b[0m\n\n`);
+    process.stdout.write(`\n  left without running:\n\n    \x1b[1m${cmd}\x1b[0m\n\n`);
   } else {
     process.stdout.write("\n  bye 👋\n\n");
   }
