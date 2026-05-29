@@ -114,7 +114,7 @@ export const HARNESSES: HarnessDef[] = [
     // --effort is a real flag (low|medium|high|xhigh|max); omit it for no-reasoning.
     buildCommand: (m, e, p) => {
       const effort = hasReasoning(e) ? ` --effort ${e}` : "";
-      return `claude -m ${m.id}${effort} ${q(p)}`;
+      return `claude --model ${m.id}${effort} ${q(p)}`;
     },
   },
   {
@@ -178,7 +178,7 @@ export const HARNESSES: HarnessDef[] = [
     label: "Cursor CLI",
     // Curated multi-provider selection.
     models: models("sonnet-4.6", "opus-4.8", "gpt-5.5", "gpt-5.4", "gemini-3.1-pro"),
-    // interactive session (no `-p` print mode); cursor-agent has no effort flag
-    buildCommand: (m, _e, p) => `cursor-agent -m ${m.id} ${q(p)}`,
+    // interactive session (no `-p` print mode); cursor-agent uses --model, no effort flag
+    buildCommand: (m, _e, p) => `cursor-agent --model ${m.id} ${q(p)}`,
   },
 ];
