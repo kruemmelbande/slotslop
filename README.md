@@ -9,6 +9,10 @@ A silly CLI slot machine for picking your coding setup. Three reels spin:
 Press <kbd>⏎</kbd> or <kbd>space</kbd> to stop each reel, left to right. It then
 prints the command to run for whatever it landed on.
 
+Built as a TUI with [OpenTUI](https://github.com/anomalyco/opentui) (React renderer).
+It uses **no hardcoded colors** — only `bold`/`dim`/`inverse` text attributes — so
+the machine adopts whatever palette your terminal theme provides.
+
 The reels are **dependent**: the harness you land on restricts which models can
 appear next (Claude Code only spins Anthropic models, Antigravity only Gemini,
 OpenCode anything…), and the model restricts which effort levels are available
@@ -18,7 +22,7 @@ OpenCode anything…), and the model restricts which effort levels are available
 
 ```bash
 bun install
-bun run src/index.ts "Update my homepage to have dark mode"
+bun run src/index.tsx "Update my homepage to have dark mode"
 ```
 
 or, once linked:
