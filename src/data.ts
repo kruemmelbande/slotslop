@@ -110,9 +110,12 @@ export const HARNESSES: HarnessDef[] = [
     id: "claude-code",
     label: "Claude Code",
     models: models("sonnet-4.6", "haiku-4.6", "opus-4.8"),
-    // claude is interactive by default (a positional prompt seeds the session);
-    // it has no reasoning-effort CLI flag.
-    buildCommand: (m, _e, p) => `claude -m ${m.id} ${q(p)}`,
+    // claude is interactive by default (a positional prompt seeds the session).
+    // --effort is a real flag (low|medium|high|xhigh|max); omit it for no-reasoning.
+    buildCommand: (m, e, p) => {
+      const effort = hasReasoning(e) ? ` --effort ${e}` : "";
+      return `claude -m ${m.id}${effort} ${q(p)}`;
+    },
   },
   {
     id: "codex",
