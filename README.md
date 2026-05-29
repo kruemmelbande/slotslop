@@ -11,7 +11,11 @@ results screen, <kbd>⏎</kbd> **runs the rolled command immediately** (handing 
 terminal to it — interactive mode), and <kbd>esc</kbd> leaves without running
 (printing the command so you can copy it). The generated commands prefer each
 harness's **interactive** mode (e.g. `codex` not `codex exec`, `cursor-agent`
-without `-p`).
+without `-p`, `opencode run` since its TUI can't be seeded with a prompt). The
+rolled effort only appears as a flag where the CLI actually supports one (Codex's
+`-c model_reasoning_effort`); the other harnesses have no effort flag, so it's
+shown in the UI but omitted from their command. (Model names are the fun fictional
+ones, so a real CLI may still reject them — that's the joke.)
 
 Built as a TUI with [OpenTUI](https://github.com/anomalyco/opentui) (React renderer).
 The reels stay on your terminal's themed ANSI palette (high contrast, native feel),

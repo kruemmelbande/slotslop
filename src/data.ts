@@ -110,10 +110,9 @@ export const HARNESSES: HarnessDef[] = [
     id: "claude-code",
     label: "Claude Code",
     models: models("sonnet-4.6", "haiku-4.6", "opus-4.8"),
-    buildCommand: (m, e, p) => {
-      const effort = hasReasoning(e) ? ` --effort ${e}` : "";
-      return `claude -m ${m.id}${effort} ${q(p)}`;
-    },
+    // claude is interactive by default (a positional prompt seeds the session);
+    // it has no reasoning-effort CLI flag.
+    buildCommand: (m, _e, p) => `claude -m ${m.id} ${q(p)}`,
   },
   {
     id: "codex",
@@ -142,11 +141,10 @@ export const HARNESSES: HarnessDef[] = [
       "gemini-3.1-pro",
       "gemini-3.5-flash",
     ),
-    buildCommand: (m, e, p) => {
-      const effort = hasReasoning(e) ? ` --reasoning-effort ${e}` : "";
-      // interactive TUI seeded with the prompt (not `opencode run`, the headless one-shot)
-      return `opencode -m ${m.provider}/${m.slug}${effort} --prompt ${q(p)}`;
-    },
+    buildCommand: (m, _e, p) =>
+      // opencode's interactive TUI takes a project path, not a prompt, and has
+      // no reasoning-effort CLI flag — so use the documented `run [message..]`.
+      `opencode run -m ${m.provider}/${m.slug} ${q(p)}`,
   },
   {
     id: "pi",
@@ -159,29 +157,23 @@ export const HARNESSES: HarnessDef[] = [
       "gpt-5.4",
       "gpt-5.4-mini",
     ),
-    buildCommand: (m, e, p) => {
-      const effort = hasReasoning(e) ? ` --effort ${e}` : "";
-      return `pi --model ${m.id}${effort} ${q(p)}`;
-    },
+    buildCommand: (m, _e, p) =>
+      // pi has no reasoning-effort flag
+      `pi --model ${m.id} ${q(p)}`,
   },
   {
     id: "antigravity",
     label: "Antigravity CLI",
     models: models("gemini-3.1-pro", "gemini-3.5-flash"),
-    buildCommand: (m, e, p) => {
-      const effort = hasReasoning(e) ? ` --thinking-level ${e}` : "";
-      return `antigravity -m ${m.id}${effort} ${q(p)}`;
-    },
+    // no documented reasoning-effort flag
+    buildCommand: (m, _e, p) => `antigravity -m ${m.id} ${q(p)}`,
   },
   {
     id: "cursor",
     label: "Cursor CLI",
     // Curated multi-provider selection.
     models: models("sonnet-4.6", "opus-4.8", "gpt-5.5", "gpt-5.4", "gemini-3.1-pro"),
-    buildCommand: (m, e, p) => {
-      const effort = hasReasoning(e) ? ` --effort ${e}` : "";
-      // interactive session (drop `-p`, which is cursor-agent's non-interactive print mode)
-      return `cursor-agent -m ${m.id}${effort} ${q(p)}`;
-    },
+    // interactive session (no `-p` print mode); cursor-agent has no effort flag
+    buildCommand: (m, _e, p) => `cursor-agent -m ${m.id} ${q(p)}`,
   },
 ];
