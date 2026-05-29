@@ -1,14 +1,37 @@
 {
-  "name": "slot-slop",
+  "name": "slotslop",
   "version": "0.1.0",
-  "description": "A silly CLI slot machine that picks your harness + model + effort and prints the command to run.",
+  "description": "A silly Vegas-style CLI slot machine that rolls your harness + model + effort, then runs the command.",
   "type": "module",
   "bin": {
-    "slot-slop": "./src/index.tsx"
+    "slotslop": "./bin/slotslop.mjs",
+    "slot-slop": "./bin/slotslop.mjs"
   },
+  "files": [
+    "bin",
+    "src",
+    "tsconfig.json",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "start": "bun run src/index.tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "tsc --noEmit"
+  },
+  "keywords": [
+    "cli",
+    "slot-machine",
+    "tui",
+    "opentui",
+    "bun",
+    "ai",
+    "fun"
+  ],
+  "author": "Theo Browne",
+  "license": "MIT",
+  "engines": {
+    "bun": ">=1.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest",

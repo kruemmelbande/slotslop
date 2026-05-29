@@ -5,14 +5,15 @@ import { createRoot } from "@opentui/react";
 import { App } from "./app";
 
 const HELP = `
-  🎰 slot-slop — spin for your harness / model / effort
+  🎰 slotslop — spin for your harness / model / effort
 
   usage:
-    slot-slop "your task prompt here"
+    slotslop "your task prompt here"     (or: bunx slotslop "...")
 
   press ⏎ or space to stop each reel, left to right.
   the harness you land on restricts which models can appear,
   and the model restricts which effort levels can appear.
+  on the results screen, ⏎ runs the rolled command, esc leaves.
 `;
 
 function onExit(cmd: string | null, run: boolean): void {

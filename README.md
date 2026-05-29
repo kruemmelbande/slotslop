@@ -51,15 +51,23 @@ OpenCode anything…), and the model restricts which effort levels are available
 
 ## Run
 
+> **Requires [Bun](https://bun.sh).** slot-slop is built on OpenTUI, which uses
+> Bun's FFI + a native library, so it runs on the Bun runtime (not plain Node).
+
+Easiest — no install:
+
+```bash
+bunx slotslop "Update my homepage to have dark mode"
+```
+
+`npx slotslop "…"` also works **if Bun is installed** (the launcher re-execs under
+Bun); otherwise it'll tell you to grab Bun.
+
+From a clone, for development:
+
 ```bash
 bun install
 bun run src/index.tsx "Update my homepage to have dark mode"
-```
-
-or, once linked:
-
-```bash
-slot-slop "Update my homepage to have dark mode"
 ```
 
 ## Example
