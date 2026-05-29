@@ -1,0 +1,17 @@
+{
+  "name": "slot-slop",
+  "version": "0.1.0",
+  "description": "A silly CLI slot machine that picks your harness + model + effort and prints the command to run.",
+  "type": "module",
+  "bin": {
+    "slot-slop": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}
