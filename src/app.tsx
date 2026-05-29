@@ -1,4 +1,4 @@
-import { createTextAttributes, type CliRenderer, type KeyEvent } from "@opentui/core";
+import { createTextAttributes, RGBA, type CliRenderer, type KeyEvent } from "@opentui/core";
 import { useKeyboard, useRenderer } from "@opentui/react";
 import { useEffect, useReducer, useRef } from "react";
 import { HARNESSES, EFFORTS } from "./data";
@@ -6,14 +6,19 @@ import { SlotEngine, type Column } from "./engine";
 
 const FRAME_MS = 70;
 
-// No hardcoded colors — we lean entirely on the terminal's own palette via
-// text attributes (bold / dim / inverse), so the machine matches whatever
-// theme the user runs.
+// No hardcoded RGB — colors come from the terminal's own ANSI palette via
+// indexed colors (RGBA.fromIndex), so the machine adopts the user's theme.
+// `inverse` gave unreliable contrast, so the payline uses explicit black text
+// on a themed bar, which is high-contrast under any theme.
 const A = {
   bold: createTextAttributes({ bold: true }),
   dim: createTextAttributes({ dim: true }),
-  inv: createTextAttributes({ inverse: true }),
-  invBold: createTextAttributes({ inverse: true, bold: true }),
+};
+const IDX = {
+  black: RGBA.fromIndex(0), // dark text for the highlight bar
+  green: RGBA.fromIndex(2), // a reel that has locked in
+  yellow: RGBA.fromIndex(3), // a reel that's winding down
+  white: RGBA.fromIndex(7), // a reel still spinning
 };
 
 // Size every reel to the widest possible label so a long model name
@@ -41,8 +46,8 @@ function Reel({ col, active, done }: { col: Column; active: boolean; done: boole
   const at = (o: number) => col.labels[(col.idx + o + L * 8) % L]!;
   const stopped = col.state === "stopped";
 
-  // The center "payline" is always inverse; active/stopped reels are bold too.
-  const centerAttr = active || stopped ? A.invBold : A.inv;
+  // Payline bar: themed background, always black text -> high contrast.
+  const barBg = stopped ? IDX.green : active && col.state === "stopping" ? IDX.yellow : IDX.white;
   const titleAttr = active && !done ? A.bold : A.dim;
   const title = stopped ? `✔ ${col.title}` : active && !done ? `▸ ${col.title} ◂` : col.title;
 
@@ -55,7 +60,9 @@ function Reel({ col, active, done }: { col: Column; active: boolean; done: boole
         <box style={{ width: "100%", justifyContent: "center" }}>
           <text attributes={A.dim}>{at(-1)}</text>
         </box>
-        <text attributes={centerAttr}>{payline(at(0), CONTENT_W)}</text>
+        <text fg={IDX.black} bg={barBg} attributes={A.bold}>
+          {payline(at(0), CONTENT_W)}
+        </text>
         <box style={{ width: "100%", justifyContent: "center" }}>
           <text attributes={A.dim}>{at(1)}</text>
         </box>
@@ -130,7 +137,7 @@ export function App({ prompt, onExit }: { prompt: string; onExit: (cmd: string |
 
       {engine.done && cmd ? (
         <box style={{ flexDirection: "column" }}>
-          <text attributes={A.bold}>🎉 all locked in — press ⏎ to drop to your shell</text>
+          <text fg={IDX.green} attributes={A.bold}>🎉 all locked in — press ⏎ to drop to your shell</text>
           <box style={{ height: 1 }} />
           <box style={{ border: true, paddingLeft: 1, paddingRight: 1, flexDirection: "column" }}>
             <text attributes={A.bold}>{cmd}</text>
