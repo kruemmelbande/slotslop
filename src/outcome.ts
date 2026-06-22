@@ -14,7 +14,7 @@ export interface Outcome {
 
 // "Smart enough" models, and the "dumb" ones that bust no matter what.
 const GREAT = new Set(["opus-4.8", "gpt-5.5"]);
-const DUMB = new Set(["sonnet-4.6", "haiku-4.6", "gpt-5.4-mini", "gpt-5.3-codex-spark"]);
+const DUMB = new Set(["sonnet-4.6", "haiku-4.5", "gpt-5.4-mini", "gpt-5.3-codex-spark"]);
 const GOOD_HARNESS = new Set(["cursor", "claude-code", "codex"]);
 
 export function classify(h: HarnessDef, m: ModelDef, e: Effort): Outcome {

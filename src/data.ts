@@ -10,12 +10,12 @@ export const EFFORTS: Effort[] = ["no-reasoning", "low", "medium", "high"];
 export type Provider = "anthropic" | "openai" | "google";
 
 export interface ModelDef {
-  /** Short id used on most CLIs, e.g. "haiku-4.6". */
+  /** Short id used on most CLIs, e.g. "haiku-4.5". */
   id: string;
   /** Human label shown in the reel. */
   label: string;
   provider: Provider;
-  /** Provider-prefixed slug, e.g. "claude-haiku-4-6" (used by opencode). */
+  /** Provider-prefixed slug, e.g. "claude-haiku-4-5" (used by opencode). */
   slug: string;
   /** Which reasoning levels this model actually supports. */
   efforts: Effort[];
@@ -30,11 +30,11 @@ const M = {
     slug: "claude-sonnet-4-6",
     efforts: ["no-reasoning", "low", "medium", "high"],
   },
-  "haiku-4.6": {
-    id: "haiku-4.6",
-    label: "Haiku 4.6",
+  "haiku-4.5": {
+    id: "haiku-4.5",
+    label: "Haiku 4.5",
     provider: "anthropic",
-    slug: "claude-haiku-4-6",
+    slug: "claude-haiku-4-5",
     efforts: ["no-reasoning", "low", "medium", "high"],
   },
   "opus-4.8": {
@@ -109,7 +109,7 @@ export const HARNESSES: HarnessDef[] = [
   {
     id: "claude-code",
     label: "Claude Code",
-    models: models("sonnet-4.6", "haiku-4.6", "opus-4.8"),
+    models: models("sonnet-4.6", "haiku-4.5", "opus-4.8"),
     // claude is interactive by default (a positional prompt seeds the session).
     // --effort is a real flag (low|medium|high|xhigh|max); omit it for no-reasoning.
     buildCommand: (m, e, p) => {
@@ -135,7 +135,7 @@ export const HARNESSES: HarnessDef[] = [
     // Multi-provider — supports everything.
     models: models(
       "sonnet-4.6",
-      "haiku-4.6",
+      "haiku-4.5",
       "opus-4.8",
       "gpt-5.5",
       "gpt-5.4",
@@ -156,7 +156,7 @@ export const HARNESSES: HarnessDef[] = [
     label: "Pi",
     models: models(
       "sonnet-4.6",
-      "haiku-4.6",
+      "haiku-4.4",
       "opus-4.8",
       "gpt-5.5",
       "gpt-5.4",
