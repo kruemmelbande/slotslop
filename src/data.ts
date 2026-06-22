@@ -156,7 +156,7 @@ export const HARNESSES: HarnessDef[] = [
     label: "Pi",
     models: models(
       "sonnet-4.6",
-      "haiku-4.4",
+      "haiku-4.5",
       "opus-4.8",
       "gpt-5.5",
       "gpt-5.4",
